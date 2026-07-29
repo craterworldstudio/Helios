@@ -7,6 +7,8 @@ HEX_DIGITS = "0123456789abcdefABCDEF"
 
 SYMBOLS = r"<>:;,.=+-*/%!?#@|\$%^&"
 ALPHANUMALL = ALPHA+NUM+SYMBOLS
+
+
 #============ TYPES =======================
 
 TT_KEYWORD = "KEYWORD"
@@ -45,6 +47,19 @@ TT_NEWLINE = "NEWLINE"
 #TT_ERROR = "ERROR"
 TT_ASSIGN = "ASSIGN"
 TT_EOF = "EOF"
+
+DELIMITER_TOKENS = {
+            "(": TT_LPAREN,
+            ")": TT_RPAREN,
+            "{": TT_LCURLY,
+            "}": TT_RCURLY,
+            "[": TT_LSQUAR,
+            "]": TT_RSQUAR,
+            ":": TT_COLON,
+            ";": TT_SCOLON,
+            ".": TT_DOT,
+            ",": TT_COMMA,
+        }
 
 DATATYPES = {
  "u8", "u16", "u32", "u64",

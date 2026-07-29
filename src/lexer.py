@@ -153,18 +153,7 @@ class Lexer:
         #if self.current == ".": self.emit(TT_DOT, self.current, self.col)
         #if self.current == ",": self.emit(TT_COMMA, self.current, self.col)
             
-        DELIMITER_TOKENS = {
-            "(": TT_LPAREN,
-            ")": TT_RPAREN,
-            "{": TT_LCURLY,
-            "}": TT_RCURLY,
-            "[": TT_LSQUAR,
-            "]": TT_RSQUAR,
-            ":": TT_COLON,
-            ";": TT_SCOLON,
-            ".": TT_DOT,
-            ",": TT_COMMA,
-        }
+        
 
         self.emit(DELIMITER_TOKENS.get(self.current), self.current, self.col)
 
