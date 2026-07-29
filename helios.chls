@@ -1,0 +1,17 @@
+name = "MasterServer"
+
+entry = "./src/master.hls"
+
+output = "./build/server"
+
+target = "native"
+
+opt = 2
+
+groups = [
+    "./src/**"
+]
+
+exclude = [
+    "./tests/**"
+]
