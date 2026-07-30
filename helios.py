@@ -1,6 +1,7 @@
 import argparse as ap
 import os
-from src.lexer import Lexer
+from src.lexer.lexer import Lexer
+from src.parser.parser import Parser
 
 def handle_build(args):
     # Resolve the path to an absolute path for reliability
@@ -12,11 +13,11 @@ def handle_build(args):
 
     #print(lexer.process_tokens())
     tokens, err = lexer.process_tokens()
+
     if err: 
         print(err)
     else:
-        for _ in list(tokens):
-            print(_)
+        ASTObj = Parser(tokens, target_path)
 
 
 def handle_run(args):

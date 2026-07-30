@@ -44,10 +44,10 @@ cat startup {
 
 	#Parallel process: ‘hold’ keeps the assigned variable in context memory till something requests it which then it gives and removes from memory. Sets the swpm to start as soon as the right side executes. Separates swpm from the pipeline by removing it from Master Child Manager and Deleting it's creation_signature. ‘Clutch’ does the same as hold except it keeps a connection open for calls and streams.
 
-	set su.pool  mpm.waypoint 
+	set su.pool mpm.waypoint 
 
 	set su.status 1 
-	witching to running.
+	#switching to running.
 	switch running
 
 }

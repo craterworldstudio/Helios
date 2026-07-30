@@ -1,4 +1,4 @@
-from src.cfgs.tokens import *
+from src.lexer.tokens import *
 from libs.Error.ErrorLib import *
 
 class Lexer:

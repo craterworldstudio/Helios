@@ -65,13 +65,13 @@ DATATYPES = {
  "u8", "u16", "u32", "u64",
  "i8", "i16", "i32", "i64",
  "f16", "f32", "f64", "f16p", "f32p", "f64p",
- "r8", "r16", "r32",
- "b8", "b16", "b32",
- "h1", "h2", "h4",
+ "r8", "r16", "r32",               #
+ "b8", "b16", "b32",               #Bin
+ "h1", "h2", "h4",                 #Hex
 
  "bool",
- "str", "s32", "s64",
- "v2", "v3", "v4",
+ "str", "s32", "s64",              #string
+ "v2", "v3", "v4",                 #vec
  "process", "task", "subtask"
 
 }
@@ -89,7 +89,7 @@ OPERATORS = {
 
 "==", "!=", "<=", ">=", "<<", ">>",
 
-"->",
+"->", "<-",
 
 
 "++", "--", "~",
@@ -99,7 +99,7 @@ OPERATORS = {
 
 DELIMITERS = {
     "(", ")", "[", "]", "{", "}", 
-    ",", ":", ";", ".",
+    ",", ":", ";", "."
 }
 
 
@@ -108,7 +108,7 @@ DELIMITERS = {
 KEYWORDS = {
     "type", "group", "import", "as",
 
-    "create", "set", "new",
+    "create", "set", "new", "cast",
 
     "TASK", "SubTASK",
 
@@ -125,11 +125,11 @@ KEYWORDS = {
 
     "and", "or", "not",
 
-    "for", "while", "then",
+    "for", "while", "then"
 
     "if", "else", "finally",
 
-    "enum", "struct",
+    "enum", "struct", "arrays",
 
     "return", "skip", "break"
 }

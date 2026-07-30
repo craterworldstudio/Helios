@@ -494,7 +494,6 @@ EOF
 - GroupNode
 - ExportNode
 - CategoryNode
-
 -- TaskNode
 -- SubTaskNode
 
