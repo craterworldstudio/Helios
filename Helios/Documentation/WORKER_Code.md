@@ -26,7 +26,7 @@ SubTASK Collision:CheckCollision(EntityListId, PlayerId) -> bool {
     clutch playerData = pm_access.get(PlayerId) as su.types.struct
 
     for (id <- Entity; id++) {
-        if ((Entity[id].pos as v3) == (playerData.position as v3) {
+        if ((Entity[id].pos as v3) == (playerData.position as v3)) {
             return true
         }
     }

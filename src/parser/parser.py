@@ -1,5 +1,7 @@
+from turtle import back
+
 from libs.Error.ErrorLib import *
-from src.lexer.tokens import TT_EOF, TT_KEYWORD, TT_LPAREN, Token
+from src.lexer.tokens import *
 from src.parser.nodes import *
 from src.parser.ParseResult import ParseResult
 
@@ -99,35 +101,352 @@ class Parser:
 
         return tok
 
-
-    
+    def parse_identifier(self, res):
+        tok = self.expect(res, TT_IDENTIFIER)
+        if res.error:
+            return None
+        return tok
 
     def primary(self):
-        pass
+        res = ParseResult()
+        tok = self.current_tok
 
+
+        if tok.type in ( TT_INT, TT_FLOAT, TT_BIN, TT_HEX, ) :
+            self.advance()
+            return res.success(LiteralNode(tok))
+
+        if tok.type == TT_STRING:
+            self.advance()
+            return res.success(StringNode(tok))
+
+        if tok.type == TT_KEYWORD:
+            if tok.value == "true" or tok.value == "false":
+                self.advance()
+                return res.success(LiteralNode(tok))
+
+            if tok.value == "null":
+                self.advance()
+                return res.success(LiteralNode(tok))
+
+
+
+        if tok.type == TT_IDENTIFIER:
+            self.advance()
+            return res.success(IdentifierNode(tok))
+
+        if tok.type == TT_LPAREN:
+            self.advance()
+
+            expr = res.register(self.expression())
+            if res.error:
+                return res
+
+            self.expect(res, TT_RPAREN)
+            if res.error:
+                return res
+
+            return res.success(expr)
+
+        return res.failure(
+            ParserError(
+                f"Unexpected token '{tok.value}'.",
+                tok.line,
+                tok.Start_Col,
+                tok.End_Col,
+                self.fn
+            )
+        )
+
+    def postfix(self):
+        res = ParseResult()
+
+        node = res.register(self.primary())
+        if res.error:
+            return res
+
+        while True:
+
+
+            # Member Access
+            # player.position
+            if self.match(TT_DOT):
+
+                member = self.expect(res, TT_IDENTIFIER)
+                if res.error:
+                    return res
+
+                node = MemberAccessNode(node, member)
+                continue    
+
+            
+            # Namespace
+            # Collision:CheckCollision
+            if self.match(TT_COLON):
+
+                member = self.expect(res, TT_IDENTIFIER)
+                if res.error:
+                    return res
+
+                node = MemberAccessNode(node, member, namespace=True)
+                continue
+
+            # Function Call
+            # foo(...)
+            if self.match(TT_LPAREN):
+
+                args = []
+
+                if not self.match(TT_RPAREN):
+
+                    while True:
+
+                        args.append(res.register(self.expression()))
+                        if res.error:
+                            return res
+
+                        if self.match(TT_COMMA):
+                            continue
+
+                        self.expect(res, TT_RPAREN)
+                        if res.error:
+                            return res
+
+                        break
+
+                node = CallNode(node, args)
+                continue
+
+            # -----------------------------
+            # Array Index
+            # foo[5]
+            # -----------------------------
+            if self.match(TT_LSQUAR):
+
+                index = res.register(self.expression())
+                if res.error:
+                    return res
+
+                self.expect(res, TT_RSQUAR)
+                if res.error:
+                    return res
+
+                node = IndexNode(node, index)
+                continue
+
+            break
+
+        return res.success(node)
+
+    def unary(self):
+
+        res = ParseResult()
+
+        if (
+            self.match(TT_OPERATOR, "-") or
+            self.match(TT_OPERATOR, "+") or
+            self.match(TT_OPERATOR, "!") or
+            self.match(TT_OPERATOR, "++") or
+            self.match(TT_OPERATOR, "--")  
+            ):
+
+            op = self.peek(-1)
+
+            operand = res.register(self.unary())
+            if res.error:
+                return res
+
+            return res.success(
+                UnaryOpNode(op, operand)
+            )
+
+        return self.postfix()
+
+    def cast(self):
+        res = ParseResult()
+
+        left = res.register(self.unary())
+        if res.error:
+            return res
+
+        while self.match(TT_KEYWORD, "as"):
+            target = self.expect(res, TT_DATATYPE)
+            if res.error:
+                return res
+
+            left = CastNode(left, target)
+
+        return res.success(left)
+
+    def binary_operation(self, high_pred, operators):
+        res = ParseResult()
+        
+        l_Op = res.register(high_pred())
+
+        if res.error: return res
+
+        while (
+                self.current_tok is not None and
+                self.current_tok.type == TT_OPERATOR and
+                self.current_tok.value in operators
+            ):
+
+            opr = self.current_tok
+            self.advance()
+            r_Op = res.register(high_pred())
+            if res.error: return res
+            l_Op = BinaryOpNode(l_Op, opr, r_Op)
+
+        return res.success(l_Op)
+
+    def multiplicative(self):
+
+        return self.binary_operation(
+            self.cast, ("*", "/", "%", "//")
+        )
+
+    def additive(self):
+        return self.binary_operation(
+            self.multiplicative, ("+", "-")
+        )
+
+    def comparison(self):
+        return self.binary_operation(
+            self.additive, ("<", ">", "<=", ">=")
+        )
+
+    def equality(self):
+        return self.binary_operation(
+            self.comparison,
+            {"==", "!="}
+        )
+
+    def logical_and(self):
+        return self.binary_operation(
+            self.equality,
+            {"&&", "!&"}
+        )
+
+    def logical_or(self):
+        return self.binary_operation(
+            self.logical_and,
+            {"||", "!|"}
+        )
 
     def expression(self):
-            res = ParseResult()
+        #res = ParseResult()
+        #return res.success(expr_node)
+        return self.logical_or()
 
-    
+
+
+    def type_statement(self):
+        res = ParseResult()
+
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        if self.current_tok.type != TT_KEYWORD:
+            return res.failure(ParserError(f"Expected Keyword.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
+
+        if self.current_tok.value not in {"MASTER", "CFG", "WORKER", "WORKER_C", "SWORKER", "SLAVE", "SLAVE_C", "SRC" }:
+            return res.failure(ParserError(f"Unknown Module Keyword: {self.current_tok.value}", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
+
+        tok = self.current_tok
+        self.advance()
+        return res.success(TypeNode(tok, start))
+
+    def group_statement(self):
+        res = ParseResult()
+
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        if self.current_tok.type != TT_IDENTIFIER:
+            return res.failure(ParserError(f"Expected Identifier.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
+
+        tok = self.current_tok
+        self.advance()
+        return res.success(GroupNode(tok, start))
+
+    def import_statement(self):
+        res = ParseResult()
+
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        if self.current_tok.type != TT_IDENTIFIER:
+            return res.failure(ParserError(f"Expected Identifier.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
+
+        tok= self.current_tok
+        as_lookup = self.peek()
+
+        if (
+                as_lookup is not None and
+                as_lookup.type == TT_KEYWORD and
+                as_lookup.value == "as"
+            ):
+            self.advance()
+            self.advance()
+
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(ParserError(f"Expected Identifier for import alias.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
             
+            return res.success(ImportNode(tok, start, self.current_tok))
+            
+        return res.success(ImportNode(tok, start))
 
-            #return res.success(expr_node)
+    def export_statement(self):
+        res = ParseResult()
+
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        self.expect(res, TT_LPAREN)
+        if res.error:
+            return res
+
+        exports = []
 
 
+        while self.current_tok.type != TT_RPAREN:
+
+            name = self.expect(res, TT_IDENTIFIER)
+            if res.error:
+                return res
+
+            self.expect(res, TT_KEYWORD, "as")
+            if res.error:
+                return res
+
+            datatype = self.expect(res, TT_DATATYPE)
+            if res.error:
+                return res
+
+            exports.append(
+                ExportEntryNode(name, datatype)
+            )
+
+            if self.match(TT_COMMA):
+                continue
+
+            self.expect(res, TT_RPAREN)
+            if res.error:
+                return res
+
+            break
+
+        return res.success(
+                ExportNode(exports, start, self.current_tok.End_Col)
+            )
 
 
-
-
-
-
-    
     def statement(self):
         #res = ParseResult()
 
         #return res.success(res.register())
 
-        if self.match(TT_KEYWORD):
+        if self.current_tok.type == TT_KEYWORD:
             handler = self.STATEMENT_HANDLERS.get(self.current_tok.value)
             if handler:
                 return handler()

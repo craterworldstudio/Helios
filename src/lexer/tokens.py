@@ -108,7 +108,7 @@ DELIMITERS = {
 KEYWORDS = {
     "type", "group", "import", "as",
 
-    "create", "set", "new", "cast",
+    "create", "set", "new"
 
     "TASK", "SubTASK",
 
