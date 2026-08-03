@@ -3,6 +3,31 @@ class Node:
         self.start = start
         self.end = end
 
+    def dump(self, indent=0):
+        prefix = "│   " * indent
+        print(f"{prefix}{self.__class__.__name__}")
+
+        for name, value in self.__dict__.items():
+
+            if name in ("start", "end"):
+                continue
+
+            if isinstance(value, Node):
+                print(f"{prefix}├── {name}")
+                value.dump(indent + 1)
+
+            elif isinstance(value, list):
+                print(f"{prefix}├── {name}")
+
+                for item in value:
+                    if isinstance(item, Node):
+                        item.dump(indent + 1)
+                    else:
+                        print(f"{prefix}│   {item}")
+
+            else:
+                print(f"{prefix}├── {name}: {value}")
+
     def __repr__(self):
         return self.__class__.__name__
 
@@ -52,12 +77,17 @@ class ExportNode(Node):
 
     
 class CategoryNode(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, category, block, start, end):
+        super().__init__(start, end)
+
+        self.category = category
+        self.block = block
 
 class BlockNode(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, statements, start, end):
+        super().__init__(start, end)
+
+        self.statements = statements
     
 class TaskNode(Node):
     def __init__(self):
@@ -82,8 +112,11 @@ class VariableDeclarationNode(Node):
     def __init__(self):
         super().__init__()
 
-    
 class AssignmentNode(Node):
+    def __init__(self):
+        super().__init__()
+
+class SetNode(Node):
     def __init__(self):
         super().__init__()
 
@@ -114,10 +147,11 @@ class ForNode(Node):
 
     
 class SwitchNode(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, target_tok, start, end):
+        super().__init__(start, end)
 
-    
+        self.target = target_tok
+ 
 class CallNode(Node):
     def __init__(self, callee, args):
         end = args[-1].end if args else callee.end
@@ -126,7 +160,6 @@ class CallNode(Node):
         self.callee = callee
         self.args  = args
 
-    
 class MemberAccessNode(Node):
     def __init__(self, node, member):
         super().__init__(node.start, member.End_Col)
@@ -162,15 +195,13 @@ class BinaryOpNode(Node):
         self.left = left
         self.op = op
         self.right = right
-
-    
+   
 class IdentifierNode(Node):
     def __init__(self, node):
-        super().__init__(node.start, node.end)
+        super().__init__(node.Start_Col, node.End_Col)
 
         self.node = node
-
-    
+   
 class LiteralNode(Node):
     def __init__(self, tok):
         super().__init__(tok.Start_col, tok.End_col)
@@ -199,12 +230,6 @@ class ArrayNode(Node):
 class HashMapNode(Node):
     def __init__(self):
         super().__init__()
-
-    
-class SetNode(Node):
-    def __init__(self):
-        super().__init__()
-
     
 class NTreeNode(Node):
     def __init__(self):

@@ -1,5 +1,3 @@
-from turtle import back
-
 from libs.Error.ErrorLib import *
 from src.lexer.tokens import *
 from src.parser.nodes import *
@@ -26,31 +24,31 @@ class Parser:
                     "cat": self.category_statement,
                     "switch": self.switch_statement,
         
-                    # Tasks
-                    "TASK": self.task_statement,
-                    "SubTASK": self.subtask_statement,
-                    "new": self.new_statement,
-                    "cast": self.cast_statement,
-        
-                    # Variables / Objects
-                    "create": self.variable_declaration,
-                    "set": self.variable_update,
-                    "struct": self.struct_declaration,
-                    "enum": self.enum_declaration,            
-        
-                    # Flow control
-                    "if": self.if_statement,
-                    "while": self.while_statement,
-                    "for": self.for_statement,
-                    
-                    # Synchronization
-                    "hold": self.hold_statement,
-                    "clutch": self.clutch_statement,
-        
-                    # Control
-                    "return": self.return_statement,
-                    "break": self.break_statement,
-                    "skip": self.skip_statement,
+                    ## Tasks
+                    #"TASK": self.task_statement,
+                    #"SubTASK": self.subtask_statement,
+                    #"new": self.new_statement,
+                    #"cast": self.cast_statement,
+        #
+                    ## Variables / Objects
+                    #"create": self.variable_declaration,
+                    #"set": self.variable_update,
+                    #"struct": self.struct_declaration,
+                    #"enum": self.enum_declaration,            
+        #
+                    ## Flow control
+                    #"if": self.if_statement,
+                    #"while": self.while_statement,
+                    #"for": self.for_statement,
+                    #
+                    ## Synchronization
+                    #"hold": self.hold_statement,
+                    #"clutch": self.clutch_statement,
+        #
+                    ## Control
+                    #"return": self.return_statement,
+                    #"break": self.break_statement,
+                    #"skip": self.skip_statement,
                 }
 
     def advance(self):
@@ -85,7 +83,7 @@ class Parser:
 
     def expect(self, res: ParseResult, token_type, value=None):
         tok = self.match(token_type, value)
-
+        print(tok, token_type, self.current_tok)
         if tok is None:
             expected = value if value is not None else token_type
 
@@ -378,7 +376,7 @@ class Parser:
         if self.current_tok.type != TT_IDENTIFIER:
             return res.failure(ParserError(f"Expected Identifier.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
 
-        tok= self.current_tok
+        tok = self.current_tok
         as_lookup = self.peek()
 
         if (
@@ -390,10 +388,13 @@ class Parser:
             self.advance()
 
             if self.current_tok.type != TT_IDENTIFIER:
-                return res.failure(ParserError(f"Expected Identifier for import alias.", self.current_tok.line, start, self.current_tok.End_Col, self.fn))
-            
-            return res.success(ImportNode(tok, start, self.current_tok))
-            
+                return res.failure(ParserError(f"Expected Identifier for import alias.", tok.line, start, tok.End_Col, self.fn))
+
+            a_tok =  self.current_tok
+            self.advance()
+            return res.success(ImportNode(tok, start, a_tok))
+
+        self.advance()
         return res.success(ImportNode(tok, start))
 
     def export_statement(self):
@@ -439,6 +440,71 @@ class Parser:
         return res.success(
                 ExportNode(exports, start, self.current_tok.End_Col)
             )
+
+
+
+
+    def category_statement(self):
+        res = ParseResult()
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        if self.current_tok.type == TT_IDENTIFIER:
+            name_tok = self.parse_identifier(res)
+            if res.error:
+                return res
+        elif self.current_tok.type == TT_KEYWORD:
+            if self.current_tok.value in {"startup", "running", "halt", "exit"}:
+                name_tok = self.current_tok
+                self.advance()
+            else:
+                return res.failure(InvalidKeywordError("Invalid usage of keyword in category naming.", self.current_tok.line, start, self.current_tok.End_Col))
+        else:
+            return res.failure(ParserError("Expected Indentifer or Reserved Category Keywords.", self.current_tok.line, start, self.current_tok.End_Col))
+        
+        self.expect(res, TT_LCURLY)
+        if res.error:
+            return res
+
+        statements = []
+        while self.current_tok.type != TT_RCURLY and self.current_tok.type != TT_EOF:
+            stmt = res.register(self.statement())
+            if res.error:
+                return res
+            statements.append(stmt)
+
+        self.expect(res, TT_RCURLY)
+        if res.error:
+            return res
+
+        block = BlockNode(statements, start, self.current_tok.End_Col)
+        node = CategoryNode(name_tok, block, start, self.current_tok.End_Col)
+        return res.success(node)
+
+    def switch_statement(self):
+        res = ParseResult()
+        start = self.current_tok.Start_Col
+        self.advance()
+
+        if self.current_tok.type == TT_IDENTIFIER:
+            target_tok = self.parse_identifier(res)
+            if res.error:
+                return res
+        elif self.current_tok.type == TT_KEYWORD:
+            if self.current_tok.value in {"startup", "running", "halt", "exit"}:
+                target_tok = self.current_tok
+                self.advance()
+            else:
+                return res.failure(InvalidKeywordError("Invalid usage of keyword in category switching.", self.current_tok.line, start, self.current_tok.End_Col))
+        else:
+            return res.failure(ParserError("Expected Indentifer or Reserved Category Keywords.", self.current_tok.line, start, self.current_tok.End_Col))
+
+        node = SwitchNode(target_tok, start, self.current_tok.End_Col)
+        return res.success(node)
+
+
+
+
 
 
     def statement(self):

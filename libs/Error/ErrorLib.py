@@ -35,3 +35,7 @@ class UnterminatedStringError(ErrorBase):
 class ParserError(ErrorBase):
     def __init__(self, statement, line, start_col, end_col, fn):
             super().__init__('Unexpected Parser Error', statement, line, start_col, end_col, fn)
+
+class InvalidKeywordError(ErrorBase):
+    def __init__(self, statement, line, start_col, end_col, fn):
+            super().__init__('Invalid Keyword Error', statement, line, start_col, end_col, fn)

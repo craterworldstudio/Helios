@@ -1,4 +1,5 @@
 import argparse as ap
+from ast import AST
 import os
 from src.lexer.lexer import Lexer
 from src.parser.parser import Parser
@@ -17,8 +18,12 @@ def handle_build(args):
     if err: 
         print(err)
     else:
-        ASTObj = Parser(tokens, target_path)
+        passer = Parser(tokens, target_path)
 
+        ast = passer.parse()
+
+        if ast.error: print(ast.error)
+        else: ast.node.dump()
 
 def handle_run(args):
     target_path = os.path.abspath(args.path)

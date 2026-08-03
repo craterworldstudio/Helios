@@ -55,9 +55,8 @@ May contain
 
 - import
 - export
+- categories
 - group
-- TASK
-- SubTASK
 - General Purpose Code
 
 ---
@@ -513,7 +512,9 @@ switch category_name
 Categories divide code into logical sections.
 
 ```hls
-cat Physics
+cat Physics {
+    ...
+}
 ```
 
 Used for organization.

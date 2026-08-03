@@ -69,10 +69,10 @@ DATATYPES = {
  "b8", "b16", "b32",               #Bin
  "h1", "h2", "h4",                 #Hex
 
- "bool",
+ "bool", "null", 
  "str", "s32", "s64",              #string
  "v2", "v3", "v4",                 #vec
- "process", "task", "subtask"
+ "process", "task", "subtask", "packet"
 
 }
 
@@ -106,9 +106,9 @@ DELIMITERS = {
 
 
 KEYWORDS = {
-    "type", "group", "import", "as",
+    "type", "group", "import", "as", "export",
 
-    "create", "set", "new"
+    "create", "set", "new",
 
     "TASK", "SubTASK",
 
@@ -121,7 +121,7 @@ KEYWORDS = {
     "WORKER", "WORKER_C", "SWORKER",
     "SLAVE", "SLAVE_C", "SRC",
     
-    "true", "false", "null",
+    "true", "false",
 
     "and", "or", "not",
 
